@@ -151,4 +151,4 @@ if __name__ == '__main__':
     GANDI_DOMAIN = _get_env_var('GANDI_DOMAIN', False)
     GANDI_RECORD = _get_env_var('GANDI_RECORD', '@')
     update_a_record()
-    update_aaaa_record()
+    #update_aaaa_record()
