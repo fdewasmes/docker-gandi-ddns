@@ -8,6 +8,8 @@ Released under the terms of the MIT license
 """
 import os
 import requests
+import fritzbox_upnp as fritz
+from time import sleep
 
 
 CACHE_KEY_IPV4 = '/run/ipv4.last'
@@ -69,12 +71,13 @@ def get_ipv4():
 
     """
     try:
-        response = requests.get('https://ipv4.icanhazip.com/')
-        response.raise_for_status()
+        #response = requests.get('https://ipv4.icanhazip.com/')
+        response = get_fritzbox_ip()
+        #response.raise_for_status()
     except Exception:
         address = None
     else:
-        address = response.text.strip()
+        address = response.strip()
     changed = False
     if address and address != _get_cache_value(CACHE_KEY_IPV4):
         _set_cache_value(CACHE_KEY_IPV4, address)
@@ -104,6 +107,20 @@ def get_ipv6():
         changed = True
     return (address, changed)
 
+def get_fritzbox_ip():
+    host = "fritz.box"
+    port = 49000
+    debug = False
+    commands = ["GetExternalIPAddress"]
+
+    for i, action in enumerate(commands):
+        # Wait until reconnected to request new IP
+        if (action == "GetExternalIPAddress" and "ForceTermination" in commands[:i]):
+            while ("Connected" not in fritz.fritz_request("GetStatusInfo", host, port)):
+                sleep(0.1)
+
+        result = fritz.fritz_request(action, host, port)
+        return fritz.get_ip_address_from_result(result)
 
 def update_a_record():
     """ Check public IPV4 address and update A record if a change has occured """
